@@ -1145,7 +1145,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
 
   let pathname: string;
   if (toPathname) {
-    toPathname = toPathname.replace(/\/\/+/g, "/");
+    toPathname = removeDoubleSlashes(toPathname);
     if (toPathname.startsWith("/")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
@@ -1341,11 +1341,14 @@ export function getToPathname(to: To): string | undefined {
     : to.pathname;
 }
 
+export const removeDoubleSlashes = (path: string): string =>
+  path.replace(/\/\/+/g, "/");
+
 /**
  * @private
  */
 export const joinPaths = (paths: string[]): string =>
-  paths.join("/").replace(/\/\/+/g, "/");
+  removeDoubleSlashes(paths.join("/"));
 
 /**
  * @private
