@@ -5,6 +5,18 @@ describe("resolvePath", () => {
     expect(resolvePath("/search", "/inbox")).toMatchObject({
       pathname: "/search",
     });
+
+    expect(resolvePath("/search/../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+
+    expect(resolvePath("/search/../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+
+    expect(resolvePath("/search/user/../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
   });
 
   it("resolves relative paths", () => {
@@ -22,6 +34,58 @@ describe("resolvePath", () => {
 
     expect(resolvePath("search", "/inbox")).toMatchObject({
       pathname: "/inbox/search",
+    });
+
+    expect(resolvePath("search/../123", "/inbox")).toMatchObject({
+      pathname: "/inbox/123",
+    });
+
+    expect(resolvePath("search/../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+
+    expect(resolvePath("search/../../../123", "/inbox")).toMatchObject({
+      pathname: "/123",
+    });
+  });
+
+  it("normalizes any mid-path double-slashes", () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    expect(resolvePath("/search/../..//foo")).toMatchObject({
+      pathname: "/foo",
+    });
+
+    expect(resolvePath("search/../..//foo", "/inbox")).toMatchObject({
+      pathname: "/foo",
+    });
+
+    spy.mockRestore();
+  });
+
+  it("handles relative paths with an embedded colon", () => {
+    expect(resolvePath("foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("./foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("../foo:bar", "/")).toMatchObject({
+      pathname: "/foo:bar",
+    });
+
+    expect(resolvePath("foo:bar", "/path")).toMatchObject({
+      pathname: "/path/foo:bar",
+    });
+
+    expect(resolvePath("./foo:bar", "/path")).toMatchObject({
+      pathname: "/path/foo:bar",
+    });
+
+    expect(resolvePath("../foo:bar", "/path")).toMatchObject({
+      pathname: "/foo:bar",
     });
   });
 
