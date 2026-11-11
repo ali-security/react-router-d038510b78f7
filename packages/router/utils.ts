@@ -1128,8 +1128,15 @@ export function stripBasename(
   return pathname.slice(startIndex) || "/";
 }
 
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+// Browsers treat backslashes as forward slashes in URLs, so any combination of
+// two leading slashes/backslashes (`//`, `\\`, `/\`, `\/`) is protocol-relative
+export const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|[\\/]{2})/i;
+export const PROTOCOL_RELATIVE_URL_REGEX = /^[\\/]{2}/;
 export const isAbsoluteUrl = (url: string) => ABSOLUTE_URL_REGEX.test(url);
+
+export function normalizeProtocolRelativeUrl(url: string, protocol: string) {
+  return protocol + url.replace(/\\/g, "/");
+}
 
 /**
  * Returns a resolved path object relative to the given pathname.
@@ -1151,6 +1158,10 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
     } else {
       pathname = resolvePathname(toPathname, fromPathname);
     }
+    // Resolving a relative path with a leading backslash against the root
+    // (i.e., `\foo` or `../\foo`) would otherwise produce `/\foo`, which the
+    // browser treats as the protocol-relative URL `//foo`
+    pathname = pathname.replace(/^[\\/]{2,}/, "/");
   } else {
     pathname = fromPathname;
   }
@@ -1342,7 +1353,7 @@ export function getToPathname(to: To): string | undefined {
 }
 
 export const removeDoubleSlashes = (path: string): string =>
-  path.replace(/\/\/+/g, "/");
+  path.replace(/[\\/]{2,}/g, "/");
 
 /**
  * @private
